@@ -48,8 +48,12 @@ import javafx.util.StringConverter;
 public class FXMLDocumentController implements Initializable {
     public final static String ALL_FILES = "Všechny soubory";
 
+    private static final String SELECTED_FILE = "selected_file";
+    private static final String SELECTED_FILE_DEFAULT = "WebTools/strings.xml";
+
     private ObservableList<TranslationString> data;
     private FilteredList<TranslationString> filteredData;
+    private Preferences prefs;
     
     @FXML
     private ComboBox filesComboBox;
@@ -86,7 +90,7 @@ public class FXMLDocumentController implements Initializable {
         filesComboBox.getSelectionModel().selectLast();
 
         // Load data
-        data = XmlDataSource.loadData();
+        data = XmlDataSource.load();
 
         // Set up data table
         String _fileName = getSelectedFile();
@@ -105,6 +109,22 @@ public class FXMLDocumentController implements Initializable {
 
         // Focus table
         focusTable();
+    }
+
+    /**
+     * Save data to XML file - called from {@link ondrejd.Costs}.
+     */
+    public void saveData() {
+        // Save data
+        XmlDataSource.save(data);
+        // Save user preferences
+        try {
+            prefs.put(SELECTED_FILE, getSelectedFile());
+            prefs.flush();
+        } catch(BackingStoreException e) {
+            //e.printStackTrace();
+            //System.out.print("Exception occured when saving user preferences!");
+        }
     }
     
     /**

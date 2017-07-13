@@ -9,8 +9,10 @@ package com.ondrejd;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,60 +28,38 @@ import org.w3c.dom.NodeList;
 
 public class XmlDataSource {
     private static final ObservableList<TranslationString> data = FXCollections.<TranslationString>observableArrayList();
+    private static final ObservableList<String> xmlFiles = FXCollections.<String>observableArrayList(
+            "/home/ondrejd/Workspace/StringsAll/Ethwork/strings.xml",
+            "/home/ondrejd/Workspace/StringsAll/Intrace/strings.xml",
+            "/home/ondrejd/Workspace/StringsAll/Qute/strings.xml",
+            "/home/ondrejd/Workspace/StringsAll/WebTools/strings.xml"
+    );
+
+    public static void appendData(ObservableList<TranslationString> d) {
+        data.addAll(d);
+    }
     
     /**
      * Load data from XML file.
      * @return List of data rows.
      */
-    public static ObservableList<TranslationString> loadData() {
-        String fileName1 = "/home/ondrejd/Workspace/StringsAll/Ethwork/strings.xml";
-        System.out.println(fileName1);
-        File file1 = new File(fileName1);
-        
-        try {
-            if(file1.exists()) {
-                loadXml(file1);
+    public static ObservableList<TranslationString> load() {
+        xmlFiles.forEach(n -> {
+            System.out.println("Processing file: " + n);
+            ObservableList<TranslationString> d = FXCollections.<TranslationString>observableArrayList();
+            File file = new File(n);
+    
+            try {
+                if(file.exists()) {
+                    d = loadXmlFile(file);
+                }
+            } catch(Exception e) {
+                e.printStackTrace();
+                d.clear();
             }
-        } catch(Exception e) {
-            e.printStackTrace();
-            //data.clear();
-        }
-        
-        String fileName2 = "/home/ondrejd/Workspace/StringsAll/Intrace/strings.xml";
-        System.out.println(fileName2);
-        File file2 = new File(fileName2);
-        try {
-            if(file2.exists()) {
-                loadXml(file2);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-            //data.clear();
-        }
-        
-        String fileName3 = "/home/ondrejd/Workspace/StringsAll/Qute/strings.xml";
-        System.out.println(fileName3);
-        File file3 = new File(fileName3);
-        try {
-            if(file3.exists()) {
-                loadXml(file3);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-            //data.clear();
-        }
-        
-        String fileName4 = "/home/ondrejd/Workspace/StringsAll/WebTools/strings.xml";
-        System.out.println(fileName4);
-        File file4 = new File(fileName4);
-        try {
-            if(file4.exists()) {
-                loadXml(file4);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-            //data.clear();
-        }
+
+            data.addAll(d);
+        });
         
         return data;
     }
@@ -88,7 +68,9 @@ public class XmlDataSource {
      * Loads XML file.
      * @param file
      */
-    private static void loadXml(File file) throws Exception {
+    private static ObservableList<TranslationString> loadXmlFile(File file) throws Exception {
+        // Prepare data
+        ObservableList<TranslationString> fileData = FXCollections.<TranslationString>observableArrayList();
         // Set filename
         String fileName = file.getParentFile().getName() + "/" + file.getName();
         // Load document
@@ -110,16 +92,67 @@ public class XmlDataSource {
             // text
             String text = stringElm.getTextContent();
             // editable
-            Boolean editable = true;
-            if(stringElm.hasAttribute("editable")) {
-                if(stringElm.getAttribute("editable").equals("false")) {
-                    editable = false;
+            Boolean translatable = true;
+            if(stringElm.hasAttribute("translatable")) {
+                if(stringElm.getAttribute("translatable").equals("false")) {
+                    translatable = false;
                 }
             }
             // Create data row
-            data.add(new TranslationString(name, text, fileName, editable));
+            fileData.add(new TranslationString(name, text, fileName, translatable));
         }
-        //System.out.println("Read file: " + file.getAbsolutePath());
-        //System.out.println("Data length: " + data.size());
+
+        return fileData;
+    }
+
+    /**
+     * Save data.
+     * @param data 
+     */
+    public static void save(ObservableList<TranslationString> data) {
+        xmlFiles.forEach(fileName -> {
+            saveXmlFile(new File(fileName), new FilteredList<>(data, n -> {
+                return (n.getFile().contains(fileName));
+            }));
+        });
+    }
+    
+    /**
+     * Save XML file.
+     * @param File XML file.
+     * @param data Data we want to save.
+     */
+    private static void saveXmlFile(File file, ObservableList<TranslationString> data) {
+        try {
+            // Create document
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+            // Root element
+            Element root = doc.createElement("resources");
+            doc.appendChild(root);
+            // Go through the strings and construct corresponding XML
+            for(int i = 0; i < data.size(); i++) {
+                Element stringElm = doc.createElement("string");
+
+                if(data.get(i).isTranslatable() != true) {
+                    stringElm.setAttribute("translatable", "false");
+                }
+
+                stringElm.setAttribute("name", data.get(i).getName());
+                stringElm.setTextContent(data.get(i).getText());
+                root.appendChild(stringElm);
+            }
+            // Write the content into xml file
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(file);
+            transformer.transform(source, result);
+        } catch (ParserConfigurationException pce) {
+            pce.printStackTrace();
+        } catch (TransformerException tfe) {
+            tfe.printStackTrace();
+        }
     }
 }

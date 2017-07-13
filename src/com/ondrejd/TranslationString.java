@@ -13,20 +13,27 @@ public class TranslationString {
     private final SimpleStringProperty name;
     private final SimpleStringProperty text;
     private final SimpleStringProperty file;
-    private final SimpleBooleanProperty editable;
+    private final SimpleBooleanProperty translatable;
 
     /**
      * Constructor
      * @param name
      * @param text
      * @param file
-     * @param editable 
+     * @param translatable 
      */
-    public TranslationString(String name, String text, String file, Boolean editable) {
+    public TranslationString(String name, String text, String file, Boolean translatable) {
         this.name = new SimpleStringProperty(name);
         this.text = new SimpleStringProperty(text);
         this.file = new SimpleStringProperty(file);
-        this.editable = new SimpleBooleanProperty(editable);
+        this.translatable = new SimpleBooleanProperty(translatable);
+    }
+
+    /**
+     * @return Boolean
+     */
+    public Boolean isTranslatable() {
+        return translatable.get();
     }
 
     /**
