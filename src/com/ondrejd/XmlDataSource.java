@@ -25,13 +25,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class XmlDataSource {
-    private static final ObservableList<DataRow> data = FXCollections.<DataRow>observableArrayList();
+    private static final ObservableList<TranslationString> data = FXCollections.<TranslationString>observableArrayList();
     
     /**
      * Load data from XML file.
      * @return List of data rows.
      */
-    public static ObservableList<DataRow> loadData() {
+    public static ObservableList<TranslationString> loadData() {
         String fileName1 = "/home/ondrejd/Workspace/StringsAll/Ethwork/strings.xml";
         System.out.println(fileName1);
         File file1 = new File(fileName1);
@@ -89,6 +89,8 @@ public class XmlDataSource {
      * @param file
      */
     private static void loadXml(File file) throws Exception {
+        // Set filename
+        String fileName = file.getParentFile().getName() + "/" + file.getName();
         // Load document
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -100,22 +102,24 @@ public class XmlDataSource {
         NodeList stringsNodes = doc.getElementsByTagName("string");
         // Go ghrough all strings
         for(int i = 0; i < stringsNodes.getLength(); i++) {
-            // Get data
+            // Get element
             Element stringElm = (Element) stringsNodes.item(i);
+            // Get data:
+            // name
             String name = stringElm.getAttribute("name");
+            // text
             String text = stringElm.getTextContent();
-            String fileName = file.getParentFile().getName() + "/" + file.getName();
-            // TODO Process attribute "editable"
+            // editable
+            Boolean editable = true;
+            if(stringElm.hasAttribute("editable")) {
+                if(stringElm.getAttribute("editable").equals("false")) {
+                    editable = false;
+                }
+            }
             // Create data row
-            //DataRow row = new DataRow(name, text, fileName);
-            //row.setName(new ColoredValue<>(name, ColoredValue.ColorType.NOCOLOR));
-            //row.setText(new ColoredValue<>(text, ColoredValue.ColorType.NOCOLOR));
-            //row.setFile(new ColoredValue<>(fileName, ColoredValue.ColorType.NOCOLOR));
-            //data.add(row);
-            data.add(new DataRow(name, text, fileName));
+            data.add(new TranslationString(name, text, fileName, editable));
         }
-        System.out.println("Read file: " + file.getAbsolutePath());
-        System.out.println("Data length: " + data.size());
+        //System.out.println("Read file: " + file.getAbsolutePath());
+        //System.out.println("Data length: " + data.size());
     }
-    
 }
