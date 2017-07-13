@@ -13,13 +13,13 @@
    <children>
       <ToolBar prefHeight="40.0" prefWidth="200.0">
          <items>
-            <Button fx:id="undoButton" mnemonicParsing="false" onAction="#handleUndoAction" text="Zpět">
-               <tooltip>
-                  <Tooltip text="Vrátit poslední změny" />
-               </tooltip>
-            </Button>
+            <Label text="Filtrovat dle souboru" />
+            <ComboBox fx:id="filesComboBox" minWidth="175.0" onAction="#handleFilesComboBoxAction" prefWidth="175.0" />
             <Separator prefWidth="20.0" />
-            <ComboBox fx:id="filesComboBox" minWidth="175.0" onAction="#handleFilesComboBoxAction" prefWidth="175.0" promptText="Otevřené soubory" />
+            <Label text="Filtrovat dle názvu" />
+            <TextField fx:id="nameTextField" onAction="#handleNameTextViewAction" />
+            
+            <Separator prefWidth="20.0" />
             <Button fx:id="saveButton" mnemonicParsing="false" onAction="#handleSaveAction" text="Uložit">
                <tooltip>
                   <Tooltip text="Uložit změny do XML souborů" />
@@ -38,6 +38,14 @@
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
+         <contextMenu>
+            <ContextMenu>
+              <items>
+                <MenuItem fx:id="filterByNameMenuItem" mnemonicParsing="false" onAction="#handleFilterByNameAction" text="Najít termín ve všech souborech" />
+                <MenuItem fx:id="cancelFilterByNameMenuItem" mnemonicParsing="false" onAction="#handleCancelFilterByName" text="Zrušit filtrování dle termínu" />
+              </items>
+            </ContextMenu>
+         </contextMenu>
       </TableView>
    </children>
 </VBox>

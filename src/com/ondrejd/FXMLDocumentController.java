@@ -57,6 +57,8 @@ public class FXMLDocumentController implements Initializable {
     private TableColumn<DataRow, ColoredValue<String>> nameTCol;
     @FXML
     private TableColumn<DataRow, ColoredValue<String>> textTCol;
+    @FXML
+    private TextField nameTextField;
 
     /**
      * Helper class that holds record about color change (because of undo).
@@ -226,25 +228,51 @@ public class FXMLDocumentController implements Initializable {
             }
         });
     }
-    
-    @FXML
-    private void handleFilesComboBoxAction(ActionEvent event) {
-        switchFile(getSelectedFile());
-    }
 
     /**
      * @param fileName
      */
-    private void switchFile(String fileName) {
+    private void filterByFile(String fileName) {
         filteredData.setPredicate(n -> {
             return fileName.equals(ALL_FILES) ? true : fileName.equals(n.fileProperty().getValue().getValue());
         });
         focusTable();
     }
+    
+    /**
+     * @param name 
+     */
+    private void filterByName(String name) {
+        filteredData.setPredicate(n -> {
+            return name.equals(n.nameProperty().getValue().getValue());
+        });
+        focusTable();
+    }
+    
+    @FXML
+    private void handleFilesComboBoxAction(ActionEvent event) {
+        filterByFile(getSelectedFile());
+    }
+    
+    @FXML
+    private void handleNameTextViewAction(ActionEvent event) {
+       // TODO 
+       //String name = "";
+       //filterByName(name)
+    }
 
     @FXML
-    private void handleUndoAction(ActionEvent event) {
-        // TODO
+    private void handleFilterByNameAction(ActionEvent event) {
+        DataRow row = table.getSelectionModel().getSelectedItem();
+        String name = row.nameProperty().getValue().getValue();
+        nameTextField.setText(name);
+        filterByName(name);
+    }
+    
+    @FXML
+    private void handleCancelFilterByName(ActionEvent event) {
+        nameTextField.setText("");
+        handleFilesComboBoxAction(event);
     }
 
     @FXML
