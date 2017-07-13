@@ -57,8 +57,6 @@ public class FXMLDocumentController implements Initializable {
     private TableColumn<DataRow, ColoredValue<String>> nameTCol;
     @FXML
     private TableColumn<DataRow, ColoredValue<String>> textTCol;
-    @FXML
-    private TableColumn<DataRow, ColoredValue<String>> fileTCol;
 
     /**
      * Helper class that holds record about color change (because of undo).
@@ -206,23 +204,6 @@ public class FXMLDocumentController implements Initializable {
                     int idx = e.getTablePosition().getRow();
                     DataRow row = (DataRow) e.getTableView().getItems().get(idx);
                     row.setText(e.getNewValue());
-                    // Undo, refresh, focus
-                    //undo.add(new UndoAction(UndoActions.UPDATE, idx, placeTCol.getId(), oldVal));
-                    e.getTableView().refresh();
-                    focusTable();
-                }
-            }
-        );
-        fileTCol.setCellValueFactory(cellData -> cellData.getValue().fileProperty());
-        fileTCol.setCellFactory(tc -> createTableCell("%s", String::new));
-        fileTCol.setOnEditCommit(
-            new EventHandler<TableColumn.CellEditEvent<DataRow, ColoredValue<String>>>() {
-                @Override
-                public void handle(TableColumn.CellEditEvent<DataRow, ColoredValue<String>> e) {
-                    ColoredValue<String> oldVal = e.getOldValue();
-                    int idx = e.getTablePosition().getRow();
-                    DataRow row = (DataRow) e.getTableView().getItems().get(idx);
-                    row.setFile(e.getNewValue());
                     // Undo, refresh, focus
                     //undo.add(new UndoAction(UndoActions.UPDATE, idx, placeTCol.getId(), oldVal));
                     e.getTableView().refresh();
