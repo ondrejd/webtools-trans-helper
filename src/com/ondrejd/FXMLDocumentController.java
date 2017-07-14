@@ -153,9 +153,15 @@ public class FXMLDocumentController implements Initializable {
             new EventHandler<CellEditEvent<TranslationString, String>>() {
                 @Override
                 public void handle(CellEditEvent<TranslationString, String> t) {
-                    ((TranslationString) t.getTableView().getItems().get(
+                    TranslationString item = ((TranslationString) t.getTableView().getItems().get(
                         t.getTablePosition().getRow())
-                        ).setText(t.getNewValue());
+                    );
+                    if(item.isTranslatable().equals(true)) {
+                        item.setText(t.getNewValue());
+                    } else {
+                        item.setText(t.getOldValue());
+                    }
+                    t.getTableView().refresh();
                 }
             }
         );
