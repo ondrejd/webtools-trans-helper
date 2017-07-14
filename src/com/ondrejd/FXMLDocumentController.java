@@ -60,6 +60,8 @@ public class FXMLDocumentController implements Initializable {
     private ObservableList<TranslationString> data;
     private FilteredList<TranslationString> filteredData;
     private Preferences prefs;
+
+    private String lastSelectedFile;
     
     @FXML
     private ComboBox filesComboBox;
@@ -83,6 +85,17 @@ public class FXMLDocumentController implements Initializable {
         return filesComboBox.getValue().toString();
     }
 
+    /**
+     * @param selectedFile 
+     */
+    private void setSelectedFile(String selectedFile) {
+        filesComboBox.getItems().forEach(n -> {
+            if(n.equals(selectedFile)) {
+                filesComboBox.getSelectionModel().select(n);
+            }
+        });
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Initialize user preferences
@@ -103,11 +116,7 @@ public class FXMLDocumentController implements Initializable {
         String selName = prefs.get(SELECTED_NAME, SELECTED_NAME_DEFAULT);
         Boolean showFileColumn = prefs.getBoolean(SHOW_FILE_COLUMN, SHOW_FILE_COLUMN_DEFAULT);
         // Restore last selected file
-        filesComboBox.getItems().forEach(n -> {
-            if(n.equals(selFile)) {
-                filesComboBox.getSelectionModel().select(n);
-            }
-        });
+        setSelectedFile(selFile);
         // Restore last selected name
         nameTextField.setText(selName);
         // Restore if file column is shown
@@ -127,6 +136,8 @@ public class FXMLDocumentController implements Initializable {
             filteredData = new FilteredList<>(data, n -> {
                 return selName.equals(n.getName());
             });
+            lastSelectedFile = getSelectedFile();
+            setSelectedFile(ALL_FILES);
             filesComboBox.setDisable(true);
         }
         table.setEditable(true);
@@ -137,6 +148,17 @@ public class FXMLDocumentController implements Initializable {
         // Set up data table columns
         nameTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("name"));
         textTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("text"));
+        textTCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        textTCol.setOnEditCommit(
+            new EventHandler<CellEditEvent<TranslationString, String>>() {
+                @Override
+                public void handle(CellEditEvent<TranslationString, String> t) {
+                    ((TranslationString) t.getTableView().getItems().get(
+                        t.getTablePosition().getRow())
+                        ).setText(t.getNewValue());
+                }
+            }
+        );
         fileTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("file"));
         fileTCol.setVisible(showFileColumn());
 
@@ -156,7 +178,7 @@ public class FXMLDocumentController implements Initializable {
      */
     public void saveData() {
         // Save data
-        //XmlDataSource.save(data);
+        XmlDataSource.save(data);
         // Save user preferences
         try {
             prefs.put(SELECTED_FILE, getSelectedFile());
@@ -184,6 +206,7 @@ public class FXMLDocumentController implements Initializable {
      * @param fileName
      */
     private void filterByFile(String fileName) {
+        setSelectedFile(fileName);
         filteredData.setPredicate(n -> {
             return fileName.equals(ALL_FILES) ? true : fileName.equals(n.getFile());
         });
@@ -210,6 +233,8 @@ public class FXMLDocumentController implements Initializable {
         String name = row.getName();
         nameTextField.setText(name);
         filesComboBox.setDisable(true);
+        lastSelectedFile = getSelectedFile();
+        filterByFile(ALL_FILES);
 
         if(showFileColumn().equals(false)) {
             showFileColumnCheckBox.setSelected(true);
@@ -223,6 +248,7 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private void handleCancelFilterByName(ActionEvent event) {
         nameTextField.setText("");
+        setSelectedFile(lastSelectedFile.isEmpty() ? ALL_FILES : lastSelectedFile);
         filesComboBox.setDisable(false);
 
         if(showFileColumn().equals(true)) {
@@ -237,12 +263,6 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private void handleShowFileColumnCheckBox(ActionEvent event) {
         fileTCol.setVisible(showFileColumn());
-    }
-
-    @FXML
-    private void handleSaveAction(ActionEvent event) {
-        // TODO
-        //XmlDataSource.save(data);
     }
     
 }

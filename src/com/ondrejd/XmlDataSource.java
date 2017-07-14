@@ -45,7 +45,6 @@ public class XmlDataSource {
      */
     public static ObservableList<TranslationString> load() {
         xmlFiles.forEach(n -> {
-            System.out.println("Processing file: " + n);
             ObservableList<TranslationString> d = FXCollections.<TranslationString>observableArrayList();
             File file = new File(n);
     
@@ -112,7 +111,7 @@ public class XmlDataSource {
     public static void save(ObservableList<TranslationString> data) {
         xmlFiles.forEach(fileName -> {
             saveXmlFile(new File(fileName), new FilteredList<>(data, n -> {
-                return (n.getFile().contains(fileName));
+                return (fileName.contains(n.getFile()));
             }));
         });
     }
@@ -122,8 +121,10 @@ public class XmlDataSource {
      * @param File XML file.
      * @param data Data we want to save.
      */
-    private static void saveXmlFile(File file, ObservableList<TranslationString> data) {
+    private static void saveXmlFile(File file, FilteredList<TranslationString> data) {
         try {
+            // Create backup
+            saveXmlBackup(file);
             // Create document
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -134,13 +135,14 @@ public class XmlDataSource {
             // Go through the strings and construct corresponding XML
             for(int i = 0; i < data.size(); i++) {
                 Element stringElm = doc.createElement("string");
+                TranslationString item = data.get(i);
 
-                if(data.get(i).isTranslatable() != true) {
+                if(item.isTranslatable() != true) {
                     stringElm.setAttribute("translatable", "false");
                 }
 
-                stringElm.setAttribute("name", data.get(i).getName());
-                stringElm.setTextContent(data.get(i).getText());
+                stringElm.setAttribute("name", item.getName());
+                stringElm.setTextContent(item.getText());
                 root.appendChild(stringElm);
             }
             // Write the content into xml file
@@ -153,6 +155,25 @@ public class XmlDataSource {
             pce.printStackTrace();
         } catch (TransformerException tfe) {
             tfe.printStackTrace();
+        }
+    }
+
+    /**
+     * Creates backup XML file (if needed).
+     * @param file
+     */
+    private static void saveXmlBackup(File file) {
+        if(!file.exists()) {
+            return;
+        }
+
+        String backupFileName = file.getAbsolutePath() + ".bak";
+        File backupFile = new File(backupFileName);
+
+        try {
+            Files.copy(file.toPath(), backupFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch(IOException ioe) {
+            ioe.printStackTrace();
         }
     }
 }
