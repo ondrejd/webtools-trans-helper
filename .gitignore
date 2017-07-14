@@ -28,6 +28,10 @@ nbproject/private
 # Build folders
 build/*
 build
-dist/*
-dist
+dist/web-files
+dist/webtools-trans-helper
+dist/*.html
+dist/*.jar
+dist/*.jnlp
+dist/*.tar.gz
 
