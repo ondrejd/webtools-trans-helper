@@ -23,7 +23,7 @@
                <font>
                   <Font size="11.0" />
                </font></Label>
-            <TextField fx:id="nameTextField" disable="true" editable="false" onAction="#handleNameTextViewAction" />
+            <TextField fx:id="nameTextField" disable="true" editable="false" />
             <Separator prefWidth="20.0" />
             <CheckBox fx:id="showFileColumnCheckBox" mnemonicParsing="false" onAction="#handleShowFileColumnCheckBox" text="Zobrazit sloupeček se zdrojovým souborem">
                <font>

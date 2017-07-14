@@ -32,14 +32,13 @@ public class WebtoolsTransHelper extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader();
-        Parent root = loader.load(getClass().getResource("Costs.fxml").openStream());
+        Parent root = loader.load(getClass().getResource("FXMLDocument.fxml").openStream());
         Scene scene = new Scene(root);
         FXMLDocumentController controller = (FXMLDocumentController)loader.getController();
         
         // Setting the css style file
         scene.getStylesheets().add("resources/css/styles.css");
         // Set title
-
         stage.setTitle("WebTools Translation Helper");
         // Pull the saved preferences and set the stage size and start location
         Preferences pref = Preferences.userRoot().node(NODE_NAME);
@@ -77,5 +76,4 @@ public class WebtoolsTransHelper extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
 }

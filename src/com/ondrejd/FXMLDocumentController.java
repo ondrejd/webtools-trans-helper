@@ -49,7 +49,13 @@ public class FXMLDocumentController implements Initializable {
     public final static String ALL_FILES = "Všechny soubory";
 
     private static final String SELECTED_FILE = "selected_file";
-    private static final String SELECTED_FILE_DEFAULT = "WebTools/strings.xml";
+    private static final String SELECTED_FILE_DEFAULT = ALL_FILES;
+
+    private static final String SELECTED_NAME = "selected_name";
+    private static final String SELECTED_NAME_DEFAULT = "";
+
+    private static final String SHOW_FILE_COLUMN = "show_file_column";
+    private static final Boolean SHOW_FILE_COLUMN_DEFAULT = true;
 
     private ObservableList<TranslationString> data;
     private FilteredList<TranslationString> filteredData;
@@ -79,6 +85,9 @@ public class FXMLDocumentController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Initialize user preferences
+        prefs = Preferences.userNodeForPackage(com.ondrejd.FXMLDocumentController.class);
+
         // Set up months combobox
         ObservableList<String> files = FXCollections.observableArrayList(
                 ALL_FILES,
@@ -89,14 +98,37 @@ public class FXMLDocumentController implements Initializable {
         filesComboBox.setItems(files);
         filesComboBox.getSelectionModel().selectLast();
 
+        // Load user preferences and set up UI accordingly
+        String selFile = prefs.get(SELECTED_FILE, SELECTED_FILE_DEFAULT);
+        String selName = prefs.get(SELECTED_NAME, SELECTED_NAME_DEFAULT);
+        Boolean showFileColumn = prefs.getBoolean(SHOW_FILE_COLUMN, SHOW_FILE_COLUMN_DEFAULT);
+        // Restore last selected file
+        filesComboBox.getItems().forEach(n -> {
+            if(n.equals(selFile)) {
+                filesComboBox.getSelectionModel().select(n);
+            }
+        });
+        // Restore last selected name
+        nameTextField.setText(selName);
+        // Restore if file column is shown
+        showFileColumnCheckBox.setSelected(showFileColumn);
+
         // Load data
         data = XmlDataSource.load();
 
         // Set up data table
-        String _fileName = getSelectedFile();
-        filteredData = new FilteredList<>(data, n -> {
-            return _fileName.equals(ALL_FILES) ? true : _fileName.equals(n.getFile());
-        });
+        if(selName.isEmpty()) {
+            // Filter by file
+            filteredData = new FilteredList<>(data, n -> {
+                return selFile.equals(ALL_FILES) ? true : selFile.equals(n.getFile());
+            });
+        } else {
+            // Filter by name
+            filteredData = new FilteredList<>(data, n -> {
+                return selName.equals(n.getName());
+            });
+            filesComboBox.setDisable(true);
+        }
         table.setEditable(true);
         table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         table.getSelectionModel().setCellSelectionEnabled(true);
@@ -106,9 +138,17 @@ public class FXMLDocumentController implements Initializable {
         nameTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("name"));
         textTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("text"));
         fileTCol.setCellValueFactory(new PropertyValueFactory<TranslationString,String>("file"));
+        fileTCol.setVisible(showFileColumn());
 
         // Focus table
         focusTable();
+    }
+
+    /**
+     * @return Returns TRUE if file column should be shown.
+     */
+    public Boolean showFileColumn() {
+        return showFileColumnCheckBox.isSelected();
     }
 
     /**
@@ -116,10 +156,12 @@ public class FXMLDocumentController implements Initializable {
      */
     public void saveData() {
         // Save data
-        XmlDataSource.save(data);
+        //XmlDataSource.save(data);
         // Save user preferences
         try {
             prefs.put(SELECTED_FILE, getSelectedFile());
+            prefs.put(SELECTED_NAME, nameTextField.getText());
+            prefs.putBoolean(SHOW_FILE_COLUMN, showFileColumn());
             prefs.flush();
         } catch(BackingStoreException e) {
             //e.printStackTrace();
@@ -145,7 +187,6 @@ public class FXMLDocumentController implements Initializable {
         filteredData.setPredicate(n -> {
             return fileName.equals(ALL_FILES) ? true : fileName.equals(n.getFile());
         });
-        focusTable();
     }
     
     /**
@@ -155,19 +196,12 @@ public class FXMLDocumentController implements Initializable {
         filteredData.setPredicate(n -> {
             return name.equals(n.getName());
         });
-        focusTable();
     }
     
     @FXML
     private void handleFilesComboBoxAction(ActionEvent event) {
         filterByFile(getSelectedFile());
-    }
-    
-    @FXML
-    private void handleNameTextViewAction(ActionEvent event) {
-       // TODO 
-       //String name = "";
-       //filterByName(name)
+        focusTable();
     }
 
     @FXML
@@ -175,23 +209,40 @@ public class FXMLDocumentController implements Initializable {
         TranslationString row = table.getSelectionModel().getSelectedItem();
         String name = row.getName();
         nameTextField.setText(name);
+        filesComboBox.setDisable(true);
+
+        if(showFileColumn().equals(false)) {
+            showFileColumnCheckBox.setSelected(true);
+            fileTCol.setVisible(true);
+        }
+
         filterByName(name);
+        focusTable();
     }
-    
+
     @FXML
     private void handleCancelFilterByName(ActionEvent event) {
         nameTextField.setText("");
-        handleFilesComboBoxAction(event);
+        filesComboBox.setDisable(false);
+
+        if(showFileColumn().equals(true)) {
+            showFileColumnCheckBox.setSelected(false);
+            fileTCol.setVisible(false);
+        }
+
+        filterByFile(getSelectedFile());
+        focusTable();
     }
-    
+
     @FXML
     private void handleShowFileColumnCheckBox(ActionEvent event) {
-        // TODO
+        fileTCol.setVisible(showFileColumn());
     }
 
     @FXML
     private void handleSaveAction(ActionEvent event) {
         // TODO
+        //XmlDataSource.save(data);
     }
     
 }
